@@ -8,3 +8,9 @@ Currently using Tautulli to retrieve deletable media
 - Long term todos:
   - [ ] swanky UI for configuration
   - [ ] remove stalled downloads from download client
+
+
+To run:
+```bash
+deno run -A main.ts
+```
