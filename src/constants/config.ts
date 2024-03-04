@@ -1,11 +1,13 @@
 import { config } from 'https://deno.land/x/dotenv/mod.ts';
 
 interface RemoveArrConfig {
-    apiKey: string;
-    url: string;
+    tautulliApiKey: string;
+    tautulliUrl: string;
     notifierId: string | undefined;
     version: string;
     deleteAfterDays?: number;
+    radarrUrl: string;
+    radarrApiKey: string;
 }
 
 const env = config();
@@ -15,9 +17,11 @@ if (!env.TAUTULLI_API_KEY || !env.TAUTULLI_API_URL) {
 }
 
 export default {
-    apiKey: env.TAUTULLI_API_KEY,
-    url: env.TAUTULLI_API_URL,
+    tautulliApiKey: env.TAUTULLI_API_KEY,
+    tautulliUrl: env.TAUTULLI_API_URL,
     notifierId: env.TAUTULLI_NOTIFIER_ID,
     version: '0.1.0',
     deleteAfterDays: env.DELETE_AFTER_DAYS ? parseInt(env.DELETE_AFTER_DAYS) : undefined,
+    radarrApiKey: env.RADARR_API_KEY,
+    radarrUrl: env.RADARR_API_URL,
 } as RemoveArrConfig;

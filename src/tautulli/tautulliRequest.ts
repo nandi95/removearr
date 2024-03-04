@@ -1,5 +1,5 @@
-import config from "./constants/config.ts";
-import {CommandToOutput, TautulliCommand} from "./constants/types.ts";
+import config from "../constants/config.ts";
+import { CommandToOutput, TautulliCommand } from "../constants/tautulliTypes.ts";
 
 /**
  * @link [Tautulli API](https://github.com/Tautulli/Tautulli/wiki/Tautulli-API-Reference)
@@ -9,7 +9,7 @@ async function tautulliRequest<CMD extends TautulliCommand>(
     init?: Omit<RequestInit, 'body'> & { body?: Record<string, string> | string }
 ): Promise<CommandToOutput[CMD]> {
     const isGet = !init?.method || init.method === 'GET';
-    const params = new URLSearchParams({ cmd, apikey: config.apiKey });
+    const params = new URLSearchParams({ cmd, apikey: config.tautulliApiKey });
 
     if (init?.body) {
         if (isGet) {
@@ -24,7 +24,7 @@ async function tautulliRequest<CMD extends TautulliCommand>(
     }
 
     return await fetch(
-        config.url + '?' + params.toString(),
+        config.tautulliUrl + '?' + params.toString(),
         init as RequestInit
     )
         .then(async response => {

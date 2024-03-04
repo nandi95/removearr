@@ -1,4 +1,4 @@
-import tautulliRequest from "./tautulliRequest.ts";
+import tautulliRequest from "./tautulli/tautulliRequest.ts";
 import config from "./constants/config.ts";
 
 /**

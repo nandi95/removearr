@@ -1,5 +1,5 @@
 import {parseArgs} from "https://deno.land/std@0.207.0/cli/parse_args.ts";
-import config from "./constants/config.ts";
+import config from "../constants/config.ts";
 
 export default function getCliArguments() {
     const flags = parseArgs(Deno.args, {
