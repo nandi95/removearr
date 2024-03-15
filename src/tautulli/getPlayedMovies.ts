@@ -1,5 +1,8 @@
 import tautulliRequest from "./tautulliRequest.ts";
 
+/**
+ * Get medias that have been started to be watched.
+ */
 export default async function getPlayedMovies() {
     const libraries = await tautulliRequest(
         'get_libraries',

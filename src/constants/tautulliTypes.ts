@@ -86,7 +86,7 @@ interface History {
     state: string | null;
     stopped: number;
     thumb: string;
-    watched_status: 0 | 1;
+    watched_status: 0 | 1 | number;
     title: string;
     transcode_decision: string;
     user: string;
