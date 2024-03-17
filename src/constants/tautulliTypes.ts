@@ -50,7 +50,7 @@ interface Notification {
     notification_id: number;
 }
 
-interface History {
+export interface History {
     date: number;
     friendly_name: string;
     full_title: string;

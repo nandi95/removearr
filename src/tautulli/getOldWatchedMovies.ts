@@ -20,6 +20,11 @@ export default async function getOldWatchedMovies(days: number) {
 
     const startedMovies = histories.filter(movie => movie.watched_status !== 1);
 
+    /**
+     * Map of rating_key to user ids who have watched the movie
+     */
+    const map = new Map<number, string[]>();
+
     return histories
         .filter((movie, index, self) => {
             if (movie.watched_status !== 1) {
@@ -34,6 +39,15 @@ export default async function getOldWatchedMovies(days: number) {
                 return false;
             }
 
+            if (!map.has(movie.rating_key)) {
+                map.set(movie.rating_key, []);
+            }
+
+            // add user id to the map if isn't already there
+            if (!map.get(movie.rating_key)!.includes(movie.user)) {
+                map.get(movie.rating_key)!.push(movie.user);
+            }
+
             const isOld = new Date(playedMedia.last_played! * 1000) < pastDate;
             // unique by rating key
             const isUnique = self.findIndex(m => m.rating_key === movie.rating_key) === index;
@@ -41,6 +55,11 @@ export default async function getOldWatchedMovies(days: number) {
             return isOld && isUnique;
         })
         .map(movie => {
-            return playedMovies.find(playedMovie => Number(playedMovie.rating_key) === movie.rating_key)!
+            const playedMovie = playedMovies.find(playedMovie => Number(playedMovie.rating_key) === movie.rating_key)!;
+
+            return {
+                ...playedMovie,
+                users: map.get(movie.rating_key)
+            };
         })
 }
