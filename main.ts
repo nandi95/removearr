@@ -15,7 +15,11 @@ const requesterTags = await radarrRequest('tag/detail')
     .then(tags => tags.map(tag => ({ moviesIds: tag.movieIds, user: tag.label.replace(/^\d+ - /, '') })));
 
 const moviesWatchedByRequester = oldWatchedMovies.filter(movie => {
-    const radarrMovie = radarrMovies.find(radarrMovie => radarrMovie.year === Number(movie.year) && radarrMovie.title === movie.title);
+    const radarrMovie = radarrMovies.find(
+        // titles might not be the same: radarrMovie.title === movie.title see: "Dune" vs "Dune: Part One"
+        // however, year and file size should be unique enough
+        radarrMovie => radarrMovie.year === Number(movie.year) && radarrMovie.statistics.sizeOnDisk === Number(movie.file_size)
+    );
 
     if (!radarrMovie) {
         console.log(`Movie not found in radarr: ${movie.title} (${movie.year})`);
