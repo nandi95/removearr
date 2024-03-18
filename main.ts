@@ -16,7 +16,7 @@ const requesterTags = await radarrRequest('tag/detail')
 
 const moviesWatchedByRequester = oldWatchedMovies.filter(movie => {
     const radarrMovie = radarrMovies.find(
-        // titles might not be the same: radarrMovie.title === movie.title see: "Dune" vs "Dune: Part One"
+        // titles might not be the same: radarrMovie.title === movie.title see: "Dune" vs "Dune: Part One (2021)"
         // however, year and file size should be unique enough
         radarrMovie => radarrMovie.year === Number(movie.year) && radarrMovie.statistics.sizeOnDisk === Number(movie.file_size)
     );
@@ -63,11 +63,11 @@ Movies going to be deleted (${deletableMovies.length}):
     Deno.exit(0);
 }
 
-await notify(
-    'Some movies are about to leave the platform',
-    `The following movies are about to be deleted:
-  - ${deletableMovies.map(movie => movie.title).join("\n  - ")}`
-);
+// await notify(
+//     'Some movies are about to leave the platform',
+//     `The following movies are about to be deleted:
+//   - ${deletableMovies.map(movie => movie.title).join("\n  - ")}`
+// );
 
 // can relate to radarr movies by get_metadata -> 'guids[]' -> 'tmdb://1156503'
 

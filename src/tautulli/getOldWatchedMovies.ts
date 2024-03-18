@@ -13,11 +13,13 @@ export default async function getOldWatchedMovies(days: number) {
         'order_dir': 'asc',
         'order_column': 'date',
         // format YYYY-MM-DD
-        'before': pastDate.toISOString().split('T')[0]
+        'before': pastDate.toISOString().split('T')[0],
+        'transcode_decision': '',
     }});
 
     const playedMovies = await getPlayedMovies();
 
+    // todo - let's not block deletion if someone else has started the movie a long time ago and never continued
     const startedMovies = histories.filter(movie => movie.watched_status !== 1);
 
     /**
