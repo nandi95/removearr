@@ -56,20 +56,17 @@ if (deletableMovies.length === 0) {
 }
 
 if (cliArgs["dry-run"]) {
-    console.log(`
-Movies going to be deleted (${deletableMovies.length}):
+    console.log(`Movies going to be deleted (${deletableMovies.length}):
   - ${deletableMovies.map(movie => movie.title).join("\n  - ")}
 `);
     Deno.exit(0);
 }
 
-// await notify(
-//     'Some movies are about to leave the platform',
-//     `The following movies are about to be deleted:
-//   - ${deletableMovies.map(movie => movie.title).join("\n  - ")}`
-// );
-
-// can relate to radarr movies by get_metadata -> 'guids[]' -> 'tmdb://1156503'
+await notify(
+    'Some movies are about to leave the platform',
+    `The following movies are about to be deleted:
+  - ${moviesToDeleteSoon.map(movie => movie.title).join("\n  - ")}`
+);
 
 // delete through radarr/sonarr
 
