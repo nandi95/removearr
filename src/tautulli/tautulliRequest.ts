@@ -32,7 +32,7 @@ async function tautulliRequest<CMD extends TautulliCommand>(
         })
         .then(resp => {
             if (resp.response.result !== 'success') {
-                throw new Error('Failed to fetch ' + cmd);
+                throw new Error(resp.response.message ?? 'Failed to fetch ' + cmd);
             }
 
             return resp.response.data;
