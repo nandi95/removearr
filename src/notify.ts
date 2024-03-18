@@ -12,10 +12,6 @@ export default async function notify(subject:string, body: string) {
     }
 
     await tautulliRequest('notify', {
-        method: 'POST',
-        body: {
-            subject,
-            body,
-        }
-    })
+        body: { subject, body, notifier_id: config.notifierId }
+    });
 }
