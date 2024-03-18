@@ -2,10 +2,14 @@ import tautulliRequest from "./tautulliRequest.ts";
 import getPlayedMovies from "./getPlayedMovies.ts";
 
 /**
- * Get movies that have been watched in full and have been sitting around for a given number of days.
+ * Get movies that have been watched in full
+ * and have been sitting around for a given
+ * number of days without anyone else watching.
  */
 export default async function getOldWatchedMovies(days: number) {
     const pastDate = new Date(Date.now() - 1000 * 60 * 60 * 24 * days);
+    // todo - make this configurable
+    const staleWatchedMovieDate = new Date(Date.now() - 1000 * 60 * 60 * 24 * days * 3);
 
     const {data: histories} = await tautulliRequest('get_history', {body: {
         media_type: 'movie',
@@ -19,8 +23,7 @@ export default async function getOldWatchedMovies(days: number) {
 
     const playedMovies = await getPlayedMovies();
 
-    // todo - let's not block deletion if someone else has started the movie a long time ago and never continued
-    const startedMovies = histories.filter(movie => movie.watched_status !== 1);
+    const startedMovies = histories.filter(movie => movie.watched_status !== 1 && new Date(movie.started * 1000) >= staleWatchedMovieDate);
 
     /**
      * Map of rating_key to user ids who have watched the movie
