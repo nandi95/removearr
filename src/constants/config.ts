@@ -1,4 +1,4 @@
-import { config } from 'https://deno.land/x/dotenv/mod.ts';
+import { dotenv } from "/deps.ts";
 
 interface RemoveArrConfig {
     tautulliApiKey: string;
@@ -10,7 +10,7 @@ interface RemoveArrConfig {
     radarrApiKey: string;
 }
 
-const env = config();
+const env = dotenv();
 
 if (!env.TAUTULLI_API_KEY || !env.TAUTULLI_API_URL) {
     throw new Error('Missing environment variables');

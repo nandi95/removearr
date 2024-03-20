@@ -12,6 +12,7 @@ const deleteSoonAfterDays = Math.round(deleteAfterDays / 2);
 const oldWatchedMovies = await getOldWatchedMovies(deleteSoonAfterDays);
 const radarrMovies = await radarrRequest('movie');
 const requesterTags = await radarrRequest('tag/detail')
+    // username prefixed like "1 - John Doe"
     .then(tags => tags.map(tag => ({ moviesIds: tag.movieIds, user: tag.label.replace(/^\d+ - /, '') })));
 
 const moviesWatchedByRequester = oldWatchedMovies.filter(movie => {
@@ -68,6 +69,7 @@ await notify(
   - ${moviesToDeleteSoon.map(movie => movie.title).join("\n  - ")}`
 );
 
+radarrRequest('movie')
 // delete through radarr/sonarr
 
 // https://github.com/LukeHagar/plexjs/blob/main/docs/sdks/library/README.md#getlibraryitems

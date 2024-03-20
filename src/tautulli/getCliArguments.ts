@@ -1,4 +1,4 @@
-import {parseArgs} from "https://deno.land/std@0.207.0/cli/parse_args.ts";
+import { parseArgs } from "/deps.ts";
 import config from "../constants/config.ts";
 
 export default function getCliArguments() {
@@ -26,5 +26,5 @@ export default function getCliArguments() {
         Deno.exit(0);
     }
 
-    return flags as Pick<typeof flags, 'dry-run'>;
+    return flags as Omit<typeof flags, 'help' | 'version'>;
 }
