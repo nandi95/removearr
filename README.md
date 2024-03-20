@@ -17,3 +17,5 @@ To run:
 ```bash
 deno run -A main.ts
 ```
+
+Example usage with docker compose in [compose.yml](./compose.yml)
