@@ -96,4 +96,6 @@ Movies going to be deleted soon (${moviesToDeleteSoon.length}):
 // implement notifications of movies soon to be deleted
 // implement logging
 // implement error handling
-// implement crons
+
+// Deno.cron('removeArr', '0 0 * * *', removeArr);
+await removeArr();
