@@ -31,6 +31,15 @@ const moviesWatchedByRequester = oldWatchedMovies.filter(movie => {
     const userWhoRequestedThis = requesterTags.find(tag => tag.moviesIds.includes(radarrMovie.id))?.user;
 
     return usersWhoWatchedThis.includes(userWhoRequestedThis!);
+    }).map(movie => {
+        const radarrMovie = radarrMovies.find(
+            radarrMovie => radarrMovie.year === Number(movie.year) && radarrMovie.statistics.sizeOnDisk === Number(movie.file_size)
+        );
+
+        return {
+            ...movie,
+            radarr_id: radarrMovie!.id
+        };
 });
 
 const { deletableMovies, moviesToDeleteSoon } = moviesWatchedByRequester.reduce((acc, movie) => {
