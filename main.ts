@@ -10,6 +10,7 @@ const cliArgs = getCliArguments();
 const deleteAfterDays = config.deleteAfterDays || 14;
 const deleteSoonAfterDays = Math.round(deleteAfterDays / 2);
 
+async function removeArr() {
 const oldWatchedMovies = await getOldWatchedMovies(deleteSoonAfterDays);
     const radarrMovies = await radarrRequest<Movie[]>('movie');
     const requesterTags = await radarrRequest<TagDetailsResource[]>('tag/detail')
@@ -54,6 +55,7 @@ const { deletableMovies, moviesToDeleteSoon } = moviesWatchedByRequester.reduce(
 
     return acc;
 }, { deletableMovies: [] as typeof moviesWatchedByRequester, moviesToDeleteSoon: [] as typeof moviesWatchedByRequester});
+
 if (cliArgs['dry-run'] && moviesToDeleteSoon.length > 0) {
     console.log(`
 Movies going to be deleted soon (${moviesToDeleteSoon.length}):
@@ -79,8 +81,9 @@ await notify(
   - ${moviesToDeleteSoon.map(movie => movie.title).join("\n  - ")}`
 );
 
-radarrRequest('movie')
-// delete through radarr/sonarr
+    console.log(`Deleting ${deletableMovies.length} movies`);
+}
+
 
 // https://github.com/LukeHagar/plexjs/blob/main/docs/sdks/library/README.md#getlibraryitems
 
