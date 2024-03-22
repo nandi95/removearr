@@ -1,4 +1,4 @@
-import getCliArguments from "./src/tautulli/getCliArguments.ts";
+import getCliArguments from "./src/getCliArguments.ts";
 import getOldWatchedMovies from "./src/tautulli/getOldWatchedMovies.ts";
 import config from "./src/constants/config.ts";
 import notify from "./src/notify.ts";
