@@ -3,6 +3,7 @@ import getOldWatchedMovies from "./src/tautulli/getOldWatchedMovies.ts";
 import config from "./src/constants/config.ts";
 import notify from "./src/notify.ts";
 import radarrRequest from "./src/radarr/radarrRequest.ts";
+import {Movie, TagDetailsResource} from "./src/constants/radarrTypes.ts";
 
 const cliArgs = getCliArguments();
 
@@ -10,8 +11,8 @@ const deleteAfterDays = config.deleteAfterDays || 14;
 const deleteSoonAfterDays = Math.round(deleteAfterDays / 2);
 
 const oldWatchedMovies = await getOldWatchedMovies(deleteSoonAfterDays);
-const radarrMovies = await radarrRequest('movie');
-const requesterTags = await radarrRequest('tag/detail')
+    const radarrMovies = await radarrRequest<Movie[]>('movie');
+    const requesterTags = await radarrRequest<TagDetailsResource[]>('tag/detail')
     // username prefixed like "1 - John Doe"
     .then(tags => tags.map(tag => ({ moviesIds: tag.movieIds, user: tag.label.replace(/^\d+ - /, '') })));
 

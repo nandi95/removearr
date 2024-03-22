@@ -132,7 +132,7 @@ export interface Movie extends ModelBase {
     isAvailable: boolean;
 }
 
-interface TagDetailsResource {
+export interface TagDetailsResource {
     id: number;
     label: string;
     delayProfileIds: number[];
@@ -143,10 +143,4 @@ interface TagDetailsResource {
     downloadClientIds: number[];
     autoTagIds: number[];
     movieIds: number[];
-
-}
-
-export interface ApiMap {
-    movie: Movie[];
-    'tag/detail': TagDetailsResource[];
 }
