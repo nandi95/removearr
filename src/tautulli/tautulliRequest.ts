@@ -1,4 +1,4 @@
-import config from "../constants/config.ts";
+import config from "../utils/config.ts";
 import { CommandToOutput, TautulliCommand } from "../constants/tautulliTypes.ts";
 
 /**

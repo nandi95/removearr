@@ -1,9 +1,10 @@
 import getCliArguments from "./src/getCliArguments.ts";
 import getOldWatchedMovies from "./src/tautulli/getOldWatchedMovies.ts";
-import config from "./src/constants/config.ts";
+import config from "./src/utils/config.ts";
 import notify from "./src/notify.ts";
 import radarrRequest from "./src/radarr/radarrRequest.ts";
-import {Movie, TagDetailsResource} from "./src/constants/radarrTypes.ts";
+import { Movie, TagDetailsResource } from "./src/constants/radarrTypes.ts";
+import log from "./src/utils/logger.ts";
 
 const cliArgs = getCliArguments();
 

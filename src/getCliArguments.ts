@@ -1,5 +1,5 @@
 import { parseArgs } from "/deps.ts";
-import config from "./constants/config.ts";
+import config from "./utils/config.ts";
 
 export default function getCliArguments() {
     const flags = parseArgs(Deno.args, {

@@ -1,4 +1,4 @@
-import config from "../constants/config.ts";
+import config from "../utils/config.ts";
 
 export default async function radarrRequest<T>(endpoint: string, init?: RequestInit): Promise<T> {
     if (!init) {
