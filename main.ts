@@ -1,7 +1,6 @@
 import getCliArguments from "./src/getCliArguments.ts";
 import getOldWatchedMovies from "./src/tautulli/getOldWatchedMovies.ts";
 import config from "./src/utils/config.ts";
-import notify from "./src/notify.ts";
 import radarrRequest from "./src/radarr/radarrRequest.ts";
 import { Movie, TagDetailsResource } from "./src/constants/radarrTypes.ts";
 import log from "./src/utils/logger.ts";
@@ -26,7 +25,7 @@ async function removeArr() {
         );
 
         if (!radarrMovie) {
-            console.log(`Movie not found in radarr: ${movie.title} (${movie.year})`);
+            log.info(`Movie not found in radarr: ${movie.title} (${movie.year})`);
             return false;
         }
 
@@ -52,41 +51,48 @@ async function removeArr() {
             playedDaysAgo >= deleteAfterDays
                 ? "deletableMovies"
                 : "moviesToDeleteSoon"
-            ].push(movie);
+        ].push(movie);
 
         return acc;
-    }, { deletableMovies: [] as typeof moviesWatchedByRequester, moviesToDeleteSoon: [] as typeof moviesWatchedByRequester});
+    }, { deletableMovies: [] as typeof moviesWatchedByRequester, moviesToDeleteSoon: [] as typeof moviesWatchedByRequester });
 
     if (cliArgs['dry-run'] && moviesToDeleteSoon.length > 0) {
-        console.log(`
-Movies going to be deleted soon (${moviesToDeleteSoon.length}):
-  - ${moviesToDeleteSoon.map(movie => movie.title).join("\n  - ")}
+        const sizeToReclaim = moviesToDeleteSoon.reduce((acc, movie) => acc + Number(movie.file_size), 0);
+
+        log.info(`Movies going to be deleted soon (${moviesToDeleteSoon.length} ~ ${(sizeToReclaim / 1024 / 1024 / 1024).toFixed(2)} GB):
+  - ${moviesToDeleteSoon.map(movie => 
+            movie.title + ' - ' + (Number(movie.file_size) / 1024 / 1024 / 1024).toFixed(2) + ' GB'
+        ).join("\n  - ")}
 `);
     }
 
     if (deletableMovies.length === 0) {
-        console.log('No movies to delete');
+        log.info('No movies to delete');
         Deno.exit(0);
     }
 
     if (cliArgs["dry-run"]) {
-        console.log(`Movies going to be deleted (${deletableMovies.length}):
-  - ${deletableMovies.map(movie => movie.title).join("\n  - ")}
+        const sizeToReclaim = deletableMovies.reduce((acc, movie) => acc + Number(movie.file_size), 0);
+
+        log.info(`Movies going to be deleted (${deletableMovies.length} ~ ${(sizeToReclaim / 1024 / 1024 / 1024).toFixed(2)} GB):
+  - ${deletableMovies.map(
+      movie => movie.title + ' - ' + (Number(movie.file_size) / 1024 / 1024 / 1024).toFixed(2) + ' GB'
+        ).join("\n  - ")}
 `);
         Deno.exit(0);
     }
 
-    await notify(
-        'Some movies are about to leave the platform',
-        `The following movies are about to be deleted:
-  - ${moviesToDeleteSoon.map(movie => movie.title).join("\n  - ")}`
-    );
+    //   await notify(
+    //       'Some movies are about to leave the platform',
+    //       `The following movies are about to be deleted:
+    // - ${moviesToDeleteSoon.map(movie => movie.title).join("\n  - ")}`
+    //   );
 
-    console.log(`Deleting ${deletableMovies.length} movies`);
+    log.info(`Deleting ${deletableMovies.length} movies`);
 
     // await Promise.all(deletableMovies.map((movie, index) => {
     //     return radarrRequest(`movie/${movie.radarr_id}?delete_files=true`, { method: 'DELETE' })
-    //         .then(() => console.log(`Deleted: ${movie.title} (${index + 1}/${deletableMovies.length})`))
+    //         .then(() => logger.info(`Deleted: ${movie.title} (${index + 1}/${deletableMovies.length})`))
     // }));
 }
 
@@ -95,8 +101,10 @@ Movies going to be deleted soon (${moviesToDeleteSoon.length}):
 // TODOS:
 // implement sonarr support
 // implement notifications of movies soon to be deleted
-// implement logging
 // implement error handling
 
 // Deno.cron('removeArr', '0 0 * * *', removeArr);
 await removeArr();
+// --allow-net for fetching from tautulli and radarr
+// --allow-read to read .env file
+// --allow-env for checking colours is allowed
