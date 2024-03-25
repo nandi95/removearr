@@ -5,7 +5,7 @@ export default function getCliArguments() {
     const flags = parseArgs(Deno.args, {
         boolean: ["help", "dry-run"],
         string: ["version"],
-        alias: { h: "help" },
+        alias: { h: "help", v: "version" }
     });
 
     if (flags.help) {
@@ -22,7 +22,7 @@ export default function getCliArguments() {
     }
 
     if (flags.version) {
-        console.log(config.version);
+        console.log('RemoveArr', config.version);
         Deno.exit(0);
     }
 
