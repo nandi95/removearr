@@ -26,13 +26,23 @@ async function removeArr() {
 
         if (!radarrMovie) {
             log.info(`Movie not found in radarr: ${movie.title} (${movie.year})`);
+
+            if (config.debug) {
+                // sometimes the year may mismatch: "Good Morning, Vietnam (1988)" vs "Good Morning, Vietnam (1987)"
+                const sameSized = radarrMovies.filter(radarrMovie => radarrMovie.statistics.sizeOnDisk === Number(movie.file_size));
+
+                if (sameSized.length > 0) {
+                    log.debug(`Potential matches: ${sameSized.map(movie => `${movie.title} (${movie.year})`).join(', ')}`);
+                }
+            }
+
             return false;
         }
 
         const usersWhoWatchedThis = movie.users!;
-        const userWhoRequestedThis = requesterTags.find(tag => tag.moviesIds.includes(radarrMovie.id))?.user;
+        const userWhoRequestedThis = requesterTags.find(tag => tag.moviesIds.includes(radarrMovie.id))?.user!;
 
-        return usersWhoWatchedThis.includes(userWhoRequestedThis!);
+        return usersWhoWatchedThis.includes(userWhoRequestedThis);
     }).map(movie => {
         const radarrMovie = radarrMovies.find(
             radarrMovie => radarrMovie.year === Number(movie.year) && radarrMovie.statistics.sizeOnDisk === Number(movie.file_size)
