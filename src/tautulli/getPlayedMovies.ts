@@ -17,7 +17,14 @@ export default async function getPlayedMovies() {
 
     const { data } = await tautulliRequest(
         'get_library_media_info',
-        { body: { refresh: 'true', section_id: movieLibrary.section_id, length: movieLibrary.count, order_column: 'last_played' } }
+        {
+            body: {
+                refresh: 'true',
+                section_id: movieLibrary.section_id,
+                length: movieLibrary.count,
+                order_column: 'last_played'
+            }
+        }
     );
 
     return data.filter(movie => movie.last_played);
