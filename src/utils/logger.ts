@@ -1,7 +1,6 @@
 import config from "../utils/config.ts";
 import { yellow, gray, cyan, bold, italic, red } from '/deps.ts';
 
-/* eslint-disable @typescript-eslint/naming-convention,@typescript-eslint/prefer-enum-initializers */
 export enum LogLevels {
     Debug,
     Info,
@@ -9,8 +8,6 @@ export enum LogLevels {
     Error,
     Fatal
 }
-
-/* eslint-enable @typescript-eslint/naming-convention,@typescript-eslint/prefer-enum-initializers */
 
 const prefixes = new Map<LogLevels, string>([
     [LogLevels.Debug, 'DEBUG'],
@@ -20,7 +17,6 @@ const prefixes = new Map<LogLevels, string>([
     [LogLevels.Fatal, 'FATAL']
 ]);
 const noColor: (str: string) => string = (msg) => msg;
-// eslint-disable-next-line @typescript-eslint/no-extra-parens
 const colorFunctions = new Map<LogLevels, (str: string) => string>([
     [LogLevels.Debug, (srt: string) => gray(srt)],
     [LogLevels.Info, (srt: string) => cyan(srt)],
