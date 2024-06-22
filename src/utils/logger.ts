@@ -49,6 +49,12 @@ function logger({
             case LogLevels.Debug:
                 if (!config.debug) return;
 
+                const logLocation = new Error().stack?.split('\n')[3].match(/(file:\/\/\/[^)]+)/)?.[1];
+
+                if (logLocation) {
+                    logValues.unshift(gray(`(${logLocation})`));
+                }
+
                 return console.debug(...logValues);
             case LogLevels.Info:
                 return console.info(...logValues);
