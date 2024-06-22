@@ -1,18 +1,19 @@
 import tautulliRequest from "./tautulliRequest.ts";
+import {LibraryType} from "../constants/tautulliTypes.ts";
 
 /**
- * Get medias that have been started to be watched.
+ * Get media that have been started to be watched.
  */
-export default async function getPlayedMovies() {
+export default async function getPlayedMedia(type: LibraryType) {
     const libraries = await tautulliRequest(
         'get_libraries',
         { body: { refresh: 'true' } }
     );
 
-    const movieLibrary = libraries.find(library => library.section_type === 'movie');
+    const mediaLibrary = libraries.find(library => library.section_type === type);
 
-    if (!movieLibrary) {
-        throw new Error('No movie library found');
+    if (!mediaLibrary) {
+        throw new Error(`No ${type} library found`);
     }
 
     const { data } = await tautulliRequest(
@@ -20,8 +21,8 @@ export default async function getPlayedMovies() {
         {
             body: {
                 refresh: 'true',
-                section_id: movieLibrary.section_id,
-                length: movieLibrary.count,
+                section_id: mediaLibrary.section_id,
+                length: mediaLibrary.count,
                 order_column: 'last_played'
             }
         }
