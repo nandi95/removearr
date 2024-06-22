@@ -109,8 +109,13 @@ async function removeArr() {
 
     await plexLeavingSoonCollection.remove(deletableMovies);
 
-    //         .then(() => logger.info(`Deleted: ${movie.title} (${index + 1}/${deletableMovies.length})`))
-    // }));
+    await Promise.all(deletableMovies.map((movie, index) => {
+        // need to delete in overseer?
+        // need to delete in plex?
+        // need to delete the original file because this will only do the hardlink
+        return radarrRequest(`movie/${movie.radarr_id}?delete_files=true`, { method: 'DELETE' })
+            .then(() => log.info(`Deleted: ${movie.title} (${index + 1}/${deletableMovies.length})`))
+    }));
 }
 
 // https://github.com/LukeHagar/plexjs/blob/main/docs/sdks/library/README.md#getlibraryitems
