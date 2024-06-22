@@ -1,4 +1,4 @@
-type LibraryType = 'show' | 'movie';
+export type LibraryType = 'show' | 'movie';
 
 interface Library {
     section_id: string;
@@ -13,7 +13,7 @@ interface Library {
     child_count: string;
 }
 
-interface Media {
+export interface Media {
     section_id: number;
     section_type: LibraryType;
     added_at: string;
