@@ -5,7 +5,8 @@ import log from "./utils/logger.ts";
 export default function getCliArguments() {
     const flags = parseArgs(Deno.args, {
         boolean: ["help", "dry-run", "debug", "version"],
-        alias: { h: "help", v: "version" }
+        default: { debug: config.debug },
+        alias: { h: "help", v: "version", dryRun: "dry-run" }
     });
 
     if (flags.help) {

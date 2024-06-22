@@ -69,7 +69,7 @@ async function removeArr() {
         return acc;
     }, { deletableMovies: [] as typeof moviesWatchedByRequester, moviesToDeleteSoon: [] as typeof moviesWatchedByRequester });
 
-    if (cliArgs['dry-run'] && moviesToDeleteSoon.length > 0) {
+    if (cliArgs.dryRun && moviesToDeleteSoon.length > 0) {
         const sizeToReclaim = moviesToDeleteSoon.reduce((acc, movie) => acc + Number(movie.file_size), 0);
 
         log.info(`Movies going to be deleted soon (${moviesToDeleteSoon.length} ~ ${(sizeToReclaim / 1024 / 1024 / 1024).toFixed(2)} GB):
@@ -84,7 +84,7 @@ async function removeArr() {
         Deno.exit(0);
     }
 
-    if (cliArgs["dry-run"]) {
+    if (cliArgs.dryRun) {
         const sizeToReclaim = deletableMovies.reduce((acc, movie) => acc + Number(movie.file_size), 0);
 
         log.info(`Movies going to be deleted (${deletableMovies.length} ~ ${(sizeToReclaim / 1024 / 1024 / 1024).toFixed(2)} GB):
