@@ -116,7 +116,7 @@ async function removeArr() {
 // implement notifications of movies soon to be deleted
 // implement error handling
 
-// Deno.cron('removeArr', '0 0 * * *', removeArr);
+// Deno.cron('removeArr', config.cronSchedule, removeArr);
 await removeArr();
 // --allow-net for fetching from tautulli and radarr
 // --allow-read to read .env file

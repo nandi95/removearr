@@ -3,6 +3,8 @@ Media removal automation for Plex Media Server ([servarr](https://wiki.servarr.c
 
 > 🏗️ Work in progress
 
+Currently, the aim is to make it work for my setup before making it more generic/configurable.
+
 - Long term todos:
   - [ ] swanky UI for configuration
   - [ ] remove stalled downloads from download client
