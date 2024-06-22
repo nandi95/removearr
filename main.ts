@@ -1,9 +1,11 @@
 import getCliArguments from "./src/getCliArguments.ts";
-import getOldWatchedMovies from "./src/tautulli/getOldWatchedMovies.ts";
+import getOldWatchedMovies, { type OldWatchedMovie } from "./src/tautulli/getOldWatchedMovies.ts";
 import config from "./src/utils/config.ts";
 import radarrRequest from "./src/radarr/radarrRequest.ts";
 import { Movie, TagDetailsResource } from "./src/constants/radarrTypes.ts";
 import log from "./src/utils/logger.ts";
+import leavingSoonCollection from "./src/plex/leavingSoonCollection.ts";
+import getPlexClient from "./src/utils/getPlexClient.ts";
 
 const cliArgs = getCliArguments();
 
@@ -11,6 +13,7 @@ const deleteAfterDays = config.deleteAfterDays || 14;
 const deleteSoonAfterDays = Math.round(deleteAfterDays / 2);
 
 async function removeArr() {
+    await leavingSoonCollection();
     const oldWatchedMovies = await getOldWatchedMovies(deleteSoonAfterDays);
     const radarrMovies = await radarrRequest<Movie[]>('movie');
     const requesterTags = await radarrRequest<TagDetailsResource[]>('tag/detail')
@@ -92,16 +95,16 @@ async function removeArr() {
         Deno.exit(0);
     }
 
-    //   await notify(
-    //       'Some movies are about to leave the platform',
-    //       `The following movies are about to be deleted:
-    // - ${moviesToDeleteSoon.map(movie => movie.title).join("\n  - ")}`
-    //   );
+    const plexLeavingSoonCollection = (await leavingSoonCollection())!;
+
+    if (moviesToDeleteSoon.length > 0) {
+        await plexLeavingSoonCollection.add(moviesToDeleteSoon);
+    }
 
     log.info(`Deleting ${deletableMovies.length} movies`);
 
-    // await Promise.all(deletableMovies.map((movie, index) => {
-    //     return radarrRequest(`movie/${movie.radarr_id}?delete_files=true`, { method: 'DELETE' })
+    await plexLeavingSoonCollection.remove(deletableMovies);
+
     //         .then(() => logger.info(`Deleted: ${movie.title} (${index + 1}/${deletableMovies.length})`))
     // }));
 }
