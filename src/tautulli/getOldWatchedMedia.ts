@@ -2,16 +2,18 @@ import tautulliRequest from "./tautulliRequest.ts";
 import getPlayedMedia from "./getPlayedMedia.ts";
 import type { Media } from "../constants/tautulliTypes.ts";
 
-export type OldWatchedMovie = Media & {
+export type OldWatchedMedia = Media & {
     users: string[] | undefined;
 }
+
+type MediaType = 'movie' | 'episode' | 'track' | 'live' | 'collection' | 'playlist';
 
 /**
  * Get movies that have been watched in full
  * and have been sitting around for a given
  * number of days without anyone else watching.
  */
-export default async function getOldWatchedMovies(days: number): Promise<OldWatchedMovie[]> {
+export default async function getOldWatchedMedia(days: number, mediaType: MediaType): Promise<OldWatchedMedia[]> {
     const pastDate = new Date(Date.now() - 1000 * 60 * 60 * 24 * days);
     // todo - make this configurable
     const staleWatchedMovieDate = new Date(Date.now() - 1000 * 60 * 60 * 24 * days * 3);

@@ -1,5 +1,5 @@
 import getCliArguments from "./src/getCliArguments.ts";
-import getOldWatchedMovies, { type OldWatchedMovie } from "./src/tautulli/getOldWatchedMovies.ts";
+import getOldWatchedMedia, { type OldWatchedMedia } from "./src/tautulli/getOldWatchedMedia.ts";
 import config from "./src/utils/config.ts";
 import radarrRequest from "./src/radarr/radarrRequest.ts";
 import { Movie, TagDetailsResource } from "./src/constants/radarrTypes.ts";
@@ -12,12 +12,12 @@ const cliArgs = getCliArguments();
 const deleteAfterDays = config.deleteAfterDays || 14;
 const deleteSoonAfterDays = Math.round(deleteAfterDays / 2);
 
-export type OldWatchedMovieWithRadarrId = OldWatchedMovie & {
+export type OldWatchedMovieWithRadarrId = OldWatchedMedia & {
     radarr_id: number;
 }
 
 async function removeArr() {
-    const oldWatchedMovies = await getOldWatchedMovies(deleteSoonAfterDays);
+    const oldWatchedMovies = await getOldWatchedMedia(deleteSoonAfterDays, 'movie');
     const radarrMovies = await radarrRequest<Movie[]>('movie');
 
     const requesterTags = await radarrRequest<TagDetailsResource[]>('tag/detail')
