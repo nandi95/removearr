@@ -12,6 +12,7 @@ export default async function getOldWatchedSeries(days: number) {
     // todo - make this configurable
     const staleWatchedMovieDate = new Date(Date.now() - 1000 * 60 * 60 * 24 * days * 3);
 
+    // todo implement pagination
     const {data: histories} = await tautulliRequest('get_history', {body: {
             media_type: 'episode',
             length: '1000',

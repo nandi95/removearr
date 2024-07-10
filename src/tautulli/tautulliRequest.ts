@@ -39,15 +39,4 @@ async function tautulliRequest<CMD extends TautulliCommand>(
         });
 }
 
-// async function paginatedRequest<CMD extends TautulliCommand>(
-//     cmd: CMD,
-//     init?: Omit<RequestInit, 'body'> & { body?: Record<string, string> | string }
-// ): Promise<CMD[]> {
-//     let page = 1;
-//     let data = await tautulliRequest(cmd, { ...init, body: { ...init?.body, page: page.toString() } });
-//
-//     return;
-// }
-
 export default tautulliRequest;
-// export { paginatedRequest };
