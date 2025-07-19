@@ -9,6 +9,7 @@ interface RemoveArrConfig {
     radarrApiKey: string;
     timeZone: string;
     debug: boolean;
+    mountPath: string;
     cronSchedule: string;
     plexURL: string;
     plexServerID: string;
@@ -32,6 +33,7 @@ export default {
     radarrUrl: env.RADARR_API_URL,
     timeZone: env.TZ ?? 'Europe/London',
     debug: env.DEBUG === 'true',
+    mountPath: env.MOUNT_PATH ?? '/data',
     plexURL: env.PLEX_URL,
     plexServerID: env.PLEX_SERVER_ID,
     plexServerName: env.PLEX_SERVER_NAME,

@@ -5,15 +5,15 @@ import radarrRequest from "./src/radarr/radarrRequest.ts";
 import { Movie, TagDetailsResource } from "./src/constants/radarrTypes.ts";
 import log from "./src/utils/logger.ts";
 import leavingSoonCollection from "./src/plex/leavingSoonCollection.ts";
-import getPlexClient from "./src/utils/getPlexClient.ts";
 
 const cliArgs = getCliArguments();
 
 const deleteAfterDays = config.deleteAfterDays || 14;
 const deleteSoonAfterDays = Math.round(deleteAfterDays / 2);
 
-export type OldWatchedMovieWithRadarrId = OldWatchedMedia & {
-    radarr_id: number;
+type OldWatchedMovieWithRadarr = {
+    tautulli: OldWatchedMedia;
+    radarr: Movie
 }
 
 async function removeArr() {
@@ -24,7 +24,7 @@ async function removeArr() {
         // username prefixed like "1 - John Doe"
         .then(tags => tags.map(tag => ({ moviesIds: tag.movieIds, user: tag.label.replace(/^\d+ - /, '') })));
 
-    const moviesWatchedByRequester: OldWatchedMovieWithRadarrId[] = oldWatchedMovies.filter(movie => {
+    const moviesWatchedByRequester: OldWatchedMovieWithRadarr[] = oldWatchedMovies.filter(movie => {
         const radarrMovie = radarrMovies.find(
             // titles might not be the same: radarrMovie.title === movie.title see: "Dune" vs "Dune: Part One (2021)"
             // however, year and file size should be unique enough
@@ -53,16 +53,16 @@ async function removeArr() {
     }).map(movie => {
         const radarrMovie = radarrMovies.find(
             radarrMovie => radarrMovie.year === Number(movie.year) && radarrMovie.statistics.sizeOnDisk === Number(movie.file_size)
-        );
+        )!;
 
         return {
-            ...movie,
-            radarr_id: radarrMovie!.id
+            tautulli: movie,
+            radarr: radarrMovie
         };
     });
 
     const { deletableMovies, moviesToDeleteSoon } = moviesWatchedByRequester.reduce((acc, movie) => {
-        const playedDaysAgo = Math.round((Date.now() - movie.last_played! * 1000) / (1000 * 60 * 60 * 24));
+        const playedDaysAgo = Math.round((Date.now() - movie.tautulli.last_played! * 1000) / (1000 * 60 * 60 * 24));
 
         acc[
             playedDaysAgo >= deleteAfterDays
@@ -74,11 +74,11 @@ async function removeArr() {
     }, { deletableMovies: [] as typeof moviesWatchedByRequester, moviesToDeleteSoon: [] as typeof moviesWatchedByRequester });
 
     if (cliArgs.dryRun && moviesToDeleteSoon.length > 0) {
-        const sizeToReclaim = moviesToDeleteSoon.reduce((acc, movie) => acc + Number(movie.file_size), 0);
+        const sizeToReclaim = moviesToDeleteSoon.reduce((acc, movie) => acc + Number(movie.tautulli.file_size), 0);
 
         log.info(`Movies going to be deleted soon (${moviesToDeleteSoon.length} ~ ${(sizeToReclaim / 1024 / 1024 / 1024).toFixed(2)} GB):
-  - ${moviesToDeleteSoon.map(movie => 
-            movie.title + ' - ' + (Number(movie.file_size) / 1024 / 1024 / 1024).toFixed(2) + ' GB'
+  - ${moviesToDeleteSoon.map(movie =>
+            movie.tautulli.title + ' - ' + (Number(movie.tautulli.file_size) / 1024 / 1024 / 1024).toFixed(2) + ' GB'
         ).join("\n  - ")}
 `);
     }
@@ -89,11 +89,11 @@ async function removeArr() {
     }
 
     if (cliArgs.dryRun) {
-        const sizeToReclaim = deletableMovies.reduce((acc, movie) => acc + Number(movie.file_size), 0);
+        const sizeToReclaim = deletableMovies.reduce((acc, movie) => acc + Number(movie.tautulli.file_size), 0);
 
         log.info(`Movies going to be deleted (${deletableMovies.length} ~ ${(sizeToReclaim / 1024 / 1024 / 1024).toFixed(2)} GB):
   - ${deletableMovies.map(
-      movie => movie.title + ' - ' + (Number(movie.file_size) / 1024 / 1024 / 1024).toFixed(2) + ' GB'
+            movie => movie.tautulli.title + ' - ' + (Number(movie.tautulli.file_size) / 1024 / 1024 / 1024).toFixed(2) + ' GB'
         ).join("\n  - ")}
 `);
         Deno.exit(0);
@@ -109,12 +109,29 @@ async function removeArr() {
 
     await plexLeavingSoonCollection.remove(deletableMovies);
 
-    await Promise.all(deletableMovies.map((movie, index) => {
-        // need to delete in overseer?
-        // need to delete in plex?
-        // need to delete the original file because this will only do the hardlink
-        return radarrRequest(`movie/${movie.radarr_id}?delete_files=true`, { method: 'DELETE' })
-            .then(() => log.info(`Deleted: ${movie.title} (${index + 1}/${deletableMovies.length})`))
+    await Promise.all(deletableMovies.map(async (movie, index) => {
+        // need to delete the original file because radarr does not delete it
+        const realPath = movie.radarr.path.startsWith(config.mountPath) ? movie.radarr.path : config.mountPath + '/' + movie.radarr.path;
+
+        const lstat = await Deno.lstat(realPath);
+        let path: string | undefined;
+
+        if (lstat.isSymlink) {
+            path = Deno.realPathSync(realPath);
+
+            if (path.replace(/\/[^/]+$/, '').endsWith('/movies')) {
+                // remove containing folder
+                path = path.replace(/\/[^/]+$/, '');
+            }
+        }
+
+        await radarrRequest(`movie/${movie.radarr.id}?delete_files=true`, { method: 'DELETE' });
+
+        if (path) {
+            Deno.removeSync(path, { recursive: true });
+        }
+
+        return log.info(`Deleted: ${movie.tautulli.title} (${index + 1}/${deletableMovies.length})`);
     }));
 }
 
