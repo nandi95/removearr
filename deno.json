@@ -2,5 +2,9 @@
   "tasks": {
     "dev": "deno run --watch main.ts"
   },
-  "imports": { "./": "./", "/": "./", "plex-api": "npm:plex-api@^5.3.2" }
+  "imports": {
+    "./": "./",
+    "/": "./",
+    "plex-api": "npm:plex-api@^5.3.2"
+  }
 }
