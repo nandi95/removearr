@@ -102,10 +102,12 @@ async function removeArr() {
     const plexLeavingSoonCollection = (await leavingSoonCollection())!;
 
     if (moviesToDeleteSoon.length > 0) {
-        await plexLeavingSoonCollection.add(moviesToDeleteSoon);
+        await plexLeavingSoonCollection.remove(moviesToDeleteSoon);
     }
 
     log.info(`Deleting ${deletableMovies.length} movies`);
+    log.debug('Leaving Soon', plexLeavingSoonCollection);
+    Deno.exit(0);
 
     await plexLeavingSoonCollection.remove(deletableMovies);
 

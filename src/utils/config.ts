@@ -24,7 +24,7 @@ if (!env.TAUTULLI_API_KEY || !env.TAUTULLI_API_URL) {
     throw new Error('Missing environment variables');
 }
 
-export default {
+const config: RemoveArrConfig = {
     tautulliApiKey: env.TAUTULLI_API_KEY,
     tautulliUrl: env.TAUTULLI_API_URL,
     version: '0.2.0',
@@ -40,4 +40,11 @@ export default {
     plexEmail: env.PLEX_EMAIL,
     plexPassword: env.PLEX_PASSWORD,
     cronSchedule: env.CRON_SCHEDULE ?? '0 6 * * *',
-} as RemoveArrConfig;
+};
+
+if (Object.keys(config).some(key => config[key as keyof RemoveArrConfig] === undefined)) {
+    console.error('Missing required configuration values: ' + Object.keys(config).filter(key => config[key as keyof RemoveArrConfig] === undefined).join(', '));
+    throw new Error('Missing required configuration values');
+}
+
+export default config;
