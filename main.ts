@@ -11,7 +11,7 @@ const cliArgs = getCliArguments();
 const deleteAfterDays = config.deleteAfterDays || 14;
 const deleteSoonAfterDays = Math.round(deleteAfterDays / 2);
 
-type OldWatchedMovieWithRadarr = {
+export type OldWatchedMovieWithRadarr = {
     tautulli: OldWatchedMedia;
     radarr: Movie
 }
