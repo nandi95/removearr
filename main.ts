@@ -21,8 +21,8 @@ async function removeArr() {
     const radarrMovies = await radarrRequest<Movie[]>('movie');
 
     const requesterTags = await radarrRequest<TagDetailsResource[]>('tag/detail')
-        // username prefixed like "1 - John Doe"
-        .then(tags => tags.map(tag => ({ moviesIds: tag.movieIds, user: tag.label.replace(/^\d+ - /, '') })));
+        // username prefixed like "1-johndoe"
+        .then(tags => tags.map(tag => ({ moviesIds: tag.movieIds, user: tag.label.replace(/^\d+\s*-\s*/, '') })));
 
     const moviesWatchedByRequester: OldWatchedMovieWithRadarr[] = oldWatchedMovies.filter(movie => {
         const radarrMovie = radarrMovies.find(
@@ -47,9 +47,16 @@ async function removeArr() {
         }
 
         const usersWhoWatchedThis = movie.users!;
-        const userWhoRequestedThis = requesterTags.find(tag => tag.moviesIds.includes(radarrMovie.id))?.user!;
+        const userWhoRequestedThis = requesterTags.find(tag => tag.moviesIds.includes(radarrMovie.id))?.user;
 
-        return usersWhoWatchedThis.includes(userWhoRequestedThis);
+        if (!userWhoRequestedThis) {
+            return false;
+        }
+
+        // radarr strips dots/spaces from tag labels ("farkasm7" vs tautulli "farkas.m7")
+        const norm = (user: string) => user.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+        return usersWhoWatchedThis.some(user => norm(user) === norm(userWhoRequestedThis));
     }).map(movie => {
         const radarrMovie = radarrMovies.find(
             radarrMovie => radarrMovie.year === Number(movie.year) && radarrMovie.statistics.sizeOnDisk === Number(movie.file_size)

@@ -1,10 +1,16 @@
 {
   "version": "5",
   "specifiers": {
+    "jsr:@deno/installer-shell-setup@*": "0.3.4",
     "npm:@ctrl/plex@*": "3.3.0",
     "npm:colors@*": "1.4.0",
     "npm:colors@1.4.0": "1.4.0",
     "npm:plex-api@^5.3.2": "5.3.2_request@2.88.2"
+  },
+  "jsr": {
+    "@deno/installer-shell-setup@0.3.4": {
+      "integrity": "48665d1a737d487cce6874bc97bba70a5aeffa7053aca3f60df93c6fab8963b4"
+    }
   },
   "npm": {
     "@ctrl/mac-address@3.0.3": {
