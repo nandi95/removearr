@@ -1,0 +1,19 @@
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+/* deeper canvas so artwork pops; slate stays as the neutral scale */
+.dark {
+  --ui-bg: var(--color-slate-950);
+  --ui-bg-muted: var(--color-slate-900);
+  --ui-bg-elevated: var(--color-slate-900);
+  --ui-bg-accented: var(--color-slate-800);
+}
+
+/* 2:3 poster with a soft fallback when the arr has no artwork */
+.poster {
+  aspect-ratio: 2 / 3;
+  background: linear-gradient(160deg, var(--ui-bg-accented), var(--ui-bg-elevated));
+}
+
+.scrollbar-none { scrollbar-width: none; }
+.scrollbar-none::-webkit-scrollbar { display: none; }

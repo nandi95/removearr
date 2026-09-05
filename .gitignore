@@ -1,2 +1,7 @@
 .env
 .idea
+node_modules
+.nuxt
+.output
+.data
+.playwright-mcp

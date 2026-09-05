@@ -6,11 +6,12 @@ on:
       - 'invalid-path'
 #      - Dockerfile
 #      - .github/workflows/publish-docker.yml
-#      - src/**
-#      - main.ts
-#      - deps.ts
-#      - deno.json
-#      - deno.lock
+#      - app/**
+#      - server/**
+#      - shared/**
+#      - nuxt.config.ts
+#      - package.json
+#      - package-lock.json
 #      - .dockerignore
     branches:
       - main

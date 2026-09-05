@@ -1,2 +1,7 @@
+node_modules
+.output
+.nuxt
+.data
+.env
 .idea
-.
+.git

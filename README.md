@@ -1,25 +1,44 @@
-## Removarr
-Media removal automation for Plex Media Server ([servarr](https://wiki.servarr.com/))
+# RemoveArr
 
-> 🏗️ Work in progress
+Reclaims disk space on a Plex + [servarr](https://wiki.servarr.com/) stack by finding media the requester has already
+finished watching and nobody has touched for a while, then letting you delete it with one click.
 
-Currently, the aim is to make it work for my setup before making it more generic/configurable.
+> Deletion is always a human action in the UI. The scheduled job only *proposes*.
 
-- Long term todos:
-  - [ ] swanky UI for configuration
-  - [ ] remove stalled downloads from download client
+## How it works
 
+- Every night (`CRON_SCHEDULE`) RemoveArr joins Radarr, Sonarr and Tautulli history and marks each movie / season:
+  - **Deletable** — the person who requested it (Radarr/Sonarr tag like `1-johndoe`) fully watched it and it has been
+    idle for `DELETE_AFTER_DAYS` (default 14).
+  - **Leaving soon** — same, but only idle for half that.
+  - **Kept** — you snoozed it (30 / 90 days or forever).
+- Movies that are leaving soon or deletable are mirrored into a Plex collection called **Leaving Soon** so viewers get a heads-up.
+- The UI has an overview, a review queue with bulk delete, a library browser and an activity log. Sync runs and deletions
+  are stored in a small SQLite file.
+- Deleting a season unmonitors it and removes its files; when nothing else of the series is on disk and no unaired season
+  has a [Seerr](https://github.com/seerr-team/seerr) request, the whole series is removed from Sonarr.
 
-It relies on
-- [Tautulli](https://tautulli.com/) for Plex Media Server monitoring (retrieving user history)
-- [Radarr](https://radarr.video/) for movie management (removing movies)
+Requires Tautulli, Radarr, Sonarr, Seerr and Plex credentials — see [.env.example](./.env.example).
 
-To run:
+## Run with Docker
+
 ```bash
-deno run -A main.ts
+cp .env.example .env   # fill in your values
+docker compose up -d   # http://localhost:8484
 ```
 
-Example usage with docker compose in [compose.yml](./compose.yml)
+The SQLite database lives in `./data` (mounted at `/app/.data`).
+
+## Develop
+
+```bash
+npm install
+npm run dev        # http://localhost:3000, reads .env
+npm test           # vitest
+npm run typecheck
+```
+
+`npm run build && node --env-file=.env .output/server/index.mjs` runs the production build locally.
 
 ## Why deleting in Sonarr/Radarr did not free disk space
 
@@ -40,4 +59,4 @@ it). The global limit checkboxes stay off; the dropdown still governs the per-to
 the dropdown out until a checkbox is ticked, so tick one, change it, save, untick, save.
 
 Now a Sonarr/Radarr delete is enough: the torrent copy is already gone, the media link is the last one,
-and the space is actually reclaimed. Removarr itself only calls the arr APIs and never touches the disk.
+and the space is actually reclaimed. RemoveArr itself only calls the arr APIs and never touches the disk.

@@ -1,24 +1,17 @@
-FROM denoland/deno:alpine
-
+FROM node:24-alpine AS build
 WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci --no-audit --no-fund
+COPY . .
+RUN npm run build
 
-# Prefer not to run as root.
-USER deno
-
-COPY deno.json .
-COPY deno.lock .
-
-# Cache the dependencies as a layer (the following two steps are re-run only when deps.ts is modified).
-# Ideally cache deps.ts will download and compile _all_ external files used in main.ts.
-COPY deps.ts .
-RUN deno cache deps.ts
-
-# These steps will be re-run upon each file change in your working directory:
-ADD src src
-ADD public public
-COPY main.ts server.ts .
-
-# Compile the main app so that it doesn't need to be compiled each startup/entry.
-RUN deno cache main.ts server.ts
-
-CMD ["run", "-A", "main.ts"]
+FROM node:24-alpine
+WORKDIR /app
+ENV NODE_ENV=production PORT=8484
+COPY --from=build /app/.output ./.output
+# sqlite lives here; mount it to keep history across upgrades
+RUN mkdir -p .data && chown node:node .data
+USER node
+VOLUME /app/.data
+EXPOSE 8484
+CMD ["node", ".output/server/index.mjs"]
