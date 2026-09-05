@@ -1,4 +1,4 @@
-import type { History } from '../types/tautulli'
+import type { History } from '../types/tautulli';
 
 export type WatchedSeason = {
     showTitle: string;
@@ -24,7 +24,7 @@ export default function groupIntoSeasons(histories: History[]): WatchedSeason[] 
             showTitle: episode.grandparent_title,
             seasonNumber: episode.parent_media_index,
             lastActivity: 0,
-            watchedEpisodesByUser: {},
+            watchedEpisodesByUser: {}
         };
         seasons.set(key, season);
 
