@@ -30,7 +30,7 @@ watch(item, (value) => { if (!value && selected.value) selected.value = null })
           <UButton icon="i-lucide-x" color="neutral" variant="ghost" class="absolute right-3 top-3 bg-black/30 text-white hover:bg-black/50" @click="open = false" />
         </div>
 
-        <div class="-mt-28 flex gap-5 px-6">
+        <div class="relative z-10 -mt-28 flex gap-5 px-6">
           <img :src="`/api/art/${selected.kind}/${item.id}/poster`" alt="" class="poster w-32 shrink-0 rounded-lg shadow-2xl ring-1 ring-white/10">
           <div class="mt-16 min-w-0 self-end pb-1">
             <h2 class="text-xl font-semibold leading-tight tracking-tight">{{ item.title }}</h2>

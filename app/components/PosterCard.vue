@@ -28,7 +28,7 @@ const sub = computed(() => {
     @click="selected = { kind, id: item.id }"
   >
     <div
-      class="poster relative w-full overflow-hidden rounded-lg transition duration-300 group-hover:-translate-y-1 group-hover:shadow-2xl group-focus-visible:ring-2 group-focus-visible:ring-primary"
+      class="poster relative w-full overflow-hidden rounded-lg transition-transform duration-200 will-change-transform group-hover:-translate-y-1 group-focus-visible:ring-2 group-focus-visible:ring-primary"
       :class="ring[item.status]"
     >
       <img
@@ -36,16 +36,16 @@ const sub = computed(() => {
         :src="`/api/art/${kind}/${item.id}/poster`"
         :alt="item.title"
         loading="lazy"
-        class="size-full object-cover transition duration-500 group-hover:scale-105"
+        class="size-full object-cover"
         @error="broken = true"
       >
       <div v-else class="grid size-full place-items-center text-dimmed">
         <UIcon :name="kind === 'movie' ? 'i-lucide-film' : 'i-lucide-tv'" class="size-8" />
       </div>
 
-      <div class="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/80 to-transparent opacity-0 transition group-hover:opacity-100" />
+      <div class="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/80 to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
 
-      <div class="absolute inset-x-2 bottom-2 translate-y-2 text-[11px] leading-snug text-white opacity-0 transition group-hover:translate-y-0 group-hover:opacity-100">
+      <div class="absolute inset-x-2 bottom-2 text-[11px] leading-snug text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100">
         <p v-if="item.requestedBy" class="truncate"><span class="text-white/60">Requested</span> {{ item.requestedBy }}</p>
         <p v-if="item.watchedBy.length" class="truncate"><span class="text-white/60">Watched</span> {{ item.watchedBy.join(', ') }}</p>
         <p v-if="item.lastPlayed" class="truncate text-white/60">{{ idleDays(item.lastPlayed) }}d idle</p>
