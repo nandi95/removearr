@@ -16,27 +16,31 @@ const TITLE = 'Leaving Soon'
 const SUMMARY = 'These media will be leaving the platform soon.'
 const MODE = { hide: -1, showItems: 2 }
 
-async function getCollection() {
+const itemUri = (ratingKeys: number[]) =>
+  encodeURIComponent(`server://${config.plexServerId}/com.plexapp.plugins.library/library/metadata/${ratingKeys.join(',')}`)
+
+/** Make the collection contain exactly these rating keys. Returns what changed. */
+export async function syncLeavingSoon(ratingKeys: number[]) {
   const plex = await getPlexClient()
   const library = await plex.library()
   // ponytail: movie section name is the user's; env override if it ever differs
   const section = await library.section(process.env.PLEX_MOVIE_SECTION || 'Films')
+  const collection = (await section.collections()).find(c => c.title === TITLE)
 
-  const existing = (await section.collections()).find(c => c.title === TITLE)
-  if (existing) return { plex, section, collection: existing }
+  if (!collection) {
+    if (!ratingKeys.length) return { added: 0, removed: 0 }
 
-  log.info('Creating Plex "Leaving Soon" collection')
-  const params = new URLSearchParams({ title: TITLE, type: '1', summary: SUMMARY, sectionId: String(section.key) })
-  const created: any = await plex.query(`/library/collections?${params}`, 'post')
-  const ratingKey = created.MediaContainer.Metadata[0].ratingKey
-  await plex.query(`/library/sections/${section.key}/all?type=18&id=${ratingKey}&title.value=${encodeURIComponent(TITLE)}&summary.value=${encodeURIComponent(SUMMARY)}`, 'put')
+    // plex rejects adds to a collection that was created empty, so it is born with its first items
+    log.info(`Creating Plex "${TITLE}" collection with ${ratingKeys.length} movies`)
+    const params = new URLSearchParams({ type: '1', title: TITLE, smart: '0', sectionId: String(section.key) })
+    const created: any = await plex.query(`/library/collections?${params}&uri=${itemUri(ratingKeys)}`, 'post')
+    const key = created.MediaContainer.Metadata[0].ratingKey
+    await plex.query(`/library/sections/${section.key}/all?type=18&id=${key}&summary.value=${encodeURIComponent(SUMMARY)}`, 'put')
+    await plex.query(`/library/collections/${key}/prefs?collectionMode=${MODE.showItems}`, 'put')
 
-  return { plex, section, collection: (await section.collections()).find(c => c.title === TITLE)! }
-}
+    return { added: ratingKeys.length, removed: 0 }
+  }
 
-/** Make the collection contain exactly these rating keys. Returns what changed. */
-export async function syncLeavingSoon(ratingKeys: number[]) {
-  const { plex, collection } = await getCollection()
   const items = await collection.items()
   const current = new Set(items.map(item => Number(item.ratingKey)))
   const wanted = new Set(ratingKeys)
@@ -44,13 +48,8 @@ export async function syncLeavingSoon(ratingKeys: number[]) {
   const add = ratingKeys.filter(key => !current.has(key))
   const remove = items.filter(item => !wanted.has(Number(item.ratingKey)))
 
-  await Promise.all([
-    ...add.map(key => plex.query(
-      `/library/collections/${collection.ratingKey}/items?uri=server://${config.plexServerId}/com.plexapp.plugins.library/library/metadata/${key}`,
-      'put',
-    )),
-    ...remove.map(item => plex.query(`/library/collections/${collection.ratingKey}/children/${item.ratingKey}`, 'delete')),
-  ])
+  if (add.length) await plex.query(`/library/collections/${collection.ratingKey}/items?uri=${itemUri(add)}`, 'put')
+  await Promise.all(remove.map(item => plex.query(`/library/collections/${collection.ratingKey}/children/${item.ratingKey}`, 'delete')))
 
   // hide the collection when it is empty, show it when it is not
   const before = items.length > 0
