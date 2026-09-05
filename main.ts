@@ -5,6 +5,11 @@ import radarrRequest from "./src/radarr/radarrRequest.ts";
 import { Movie, TagDetailsResource } from "./src/constants/radarrTypes.ts";
 import log from "./src/utils/logger.ts";
 import leavingSoonCollection from "./src/plex/leavingSoonCollection.ts";
+import sonarrRequest from "./src/sonarr/sonarrRequest.ts";
+import { Series, SeriesTagDetails } from "./src/constants/sonarrTypes.ts";
+import getOldWatchedSeasons from "./src/tautulli/getOldWatchedSeasons.ts";
+import deleteMovie from "./src/radarr/deleteMovie.ts";
+import deleteSeason from "./src/sonarr/deleteSeason.ts";
 
 const cliArgs = getCliArguments();
 
@@ -92,7 +97,7 @@ async function removeArr() {
 
     if (deletableMovies.length === 0) {
         log.info('No movies to delete');
-        Deno.exit(0);
+        return;
     }
 
     if (cliArgs.dryRun) {
@@ -103,7 +108,7 @@ async function removeArr() {
             movie => movie.tautulli.title + ' - ' + (Number(movie.tautulli.file_size) / 1024 / 1024 / 1024).toFixed(2) + ' GB'
         ).join("\n  - ")}
 `);
-        Deno.exit(0);
+        return;
     }
 
     const plexLeavingSoonCollection = (await leavingSoonCollection())!;
@@ -114,45 +119,117 @@ async function removeArr() {
 
     log.info(`Deleting ${deletableMovies.length} movies`);
     log.debug('Leaving Soon', plexLeavingSoonCollection);
-    Deno.exit(0);
+    return;
 
     await plexLeavingSoonCollection.remove(deletableMovies);
 
     await Promise.all(deletableMovies.map(async (movie, index) => {
-        // need to delete the original file because radarr does not delete it
-        const realPath = movie.radarr.path.startsWith(config.mountPath) ? movie.radarr.path : config.mountPath + '/' + movie.radarr.path;
-
-        const lstat = await Deno.lstat(realPath);
-        let path: string | undefined;
-
-        if (lstat.isSymlink) {
-            path = Deno.realPathSync(realPath);
-
-            if (path.replace(/\/[^/]+$/, '').endsWith('/movies')) {
-                // remove containing folder
-                path = path.replace(/\/[^/]+$/, '');
-            }
-        }
-
-        await radarrRequest(`movie/${movie.radarr.id}?delete_files=true`, { method: 'DELETE' });
-
-        if (path) {
-            Deno.removeSync(path, { recursive: true });
-        }
+        await deleteMovie(movie.radarr);
 
         return log.info(`Deleted: ${movie.tautulli.title} (${index + 1}/${deletableMovies.length})`);
     }));
 }
 
+type DeletableSeason = {
+    series: Series;
+    seasonNumber: number;
+    sizeOnDisk: number;
+};
+
+async function removeArrSeasons() {
+    const oldSeasons = await getOldWatchedSeasons(deleteSoonAfterDays);
+    const allSeries = await sonarrRequest<Series[]>('series');
+
+    const requesterTags = await sonarrRequest<SeriesTagDetails[]>('tag/detail')
+        // username prefixed like "1-johndoe"
+        .then(tags => tags.map(tag => ({ seriesIds: tag.seriesIds, user: tag.label.replace(/^\d+\s*-\s*/, '') })));
+
+    // sonarr strips dots/spaces from tag labels ("farkasm7" vs tautulli "farkas.m7")
+    const norm = (user: string) => user.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+    const deletableSeasons: DeletableSeason[] = [];
+    const seasonsToDeleteSoon: DeletableSeason[] = [];
+
+    for (const watched of oldSeasons) {
+        const series = allSeries.find(series => norm(series.title) === norm(watched.showTitle));
+
+        if (!series) {
+            log.info(`Show not found in sonarr: ${watched.showTitle}`);
+            continue;
+        }
+
+        const season = series.seasons.find(season => season.seasonNumber === watched.seasonNumber);
+
+        if (!season || season.statistics.episodeFileCount === 0) {
+            continue;
+        }
+
+        const userWhoRequestedThis = requesterTags.find(tag => tag.seriesIds.includes(series.id))?.user;
+
+        if (!userWhoRequestedThis) {
+            continue;
+        }
+
+        const watchedEpisodes = Object.entries(watched.watchedEpisodesByUser)
+            .find(([user]) => norm(user) === norm(userWhoRequestedThis))?.[1];
+
+        // ponytail: "full season" = requester fully watched at least as many distinct episodes as files on disk
+        if (!watchedEpisodes || watchedEpisodes.size < season.statistics.episodeFileCount) {
+            continue;
+        }
+
+        const playedDaysAgo = Math.round((Date.now() / 1000 - watched.lastActivity) / (60 * 60 * 24));
+
+        (playedDaysAgo >= deleteAfterDays ? deletableSeasons : seasonsToDeleteSoon).push({
+            series,
+            seasonNumber: watched.seasonNumber,
+            sizeOnDisk: season.statistics.sizeOnDisk,
+        });
+    }
+
+    const label = (season: DeletableSeason) =>
+        `${season.series.title} - Season ${season.seasonNumber} - ${(season.sizeOnDisk / 1024 / 1024 / 1024).toFixed(2)} GB`;
+    const totalGb = (seasons: DeletableSeason[]) =>
+        (seasons.reduce((acc, season) => acc + season.sizeOnDisk, 0) / 1024 / 1024 / 1024).toFixed(2);
+
+    if (cliArgs.dryRun && seasonsToDeleteSoon.length > 0) {
+        log.info(`Seasons going to be deleted soon (${seasonsToDeleteSoon.length} ~ ${totalGb(seasonsToDeleteSoon)} GB):
+  - ${seasonsToDeleteSoon.map(label).join("\n  - ")}
+`);
+    }
+
+    if (deletableSeasons.length === 0) {
+        log.info('No seasons to delete');
+        return;
+    }
+
+    if (cliArgs.dryRun) {
+        log.info(`Seasons going to be deleted (${deletableSeasons.length} ~ ${totalGb(deletableSeasons)} GB):
+  - ${deletableSeasons.map(label).join("\n  - ")}
+`);
+        return;
+    }
+
+    log.info(`Deleting ${deletableSeasons.length} seasons`);
+    // same safety brake as the movie flow — remove this line to enable deletion
+    return;
+
+    for (const { series, seasonNumber } of deletableSeasons) {
+        await deleteSeason(series, seasonNumber);
+
+        log.info(`Deleted: ${series.title} - Season ${seasonNumber}`);
+    }
+}
+
 // https://github.com/LukeHagar/plexjs/blob/main/docs/sdks/library/README.md#getlibraryitems
 
 // TODOS:
-// implement sonarr support
 // implement notifications of movies soon to be deleted
 // implement error handling
 
 // Deno.cron('removeArr', config.cronSchedule, removeArr);
-await removeArr();
+if (!cliArgs.series) await removeArr();
+if (!cliArgs.movies) await removeArrSeasons();
 // --allow-net for fetching from tautulli and radarr
 // --allow-read to read .env file
 // --allow-env for checking colours is allowed

@@ -15,9 +15,10 @@ RUN deno cache deps.ts
 
 # These steps will be re-run upon each file change in your working directory:
 ADD src src
-COPY main.ts .
+ADD public public
+COPY main.ts server.ts .
 
 # Compile the main app so that it doesn't need to be compiled each startup/entry.
-RUN deno cache main.ts
+RUN deno cache main.ts server.ts
 
 CMD ["run", "-A", "main.ts"]

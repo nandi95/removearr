@@ -7,6 +7,10 @@ interface RemoveArrConfig {
     deleteAfterDays?: number;
     radarrUrl: string;
     radarrApiKey: string;
+    sonarrUrl: string;
+    sonarrApiKey: string;
+    overseerrUrl: string;
+    overseerrApiKey: string;
     timeZone: string;
     debug: boolean;
     mountPath: string;
@@ -31,6 +35,10 @@ const config: RemoveArrConfig = {
     deleteAfterDays: env.DELETE_AFTER_DAYS ? parseInt(env.DELETE_AFTER_DAYS) : undefined,
     radarrApiKey: env.RADARR_API_KEY,
     radarrUrl: env.RADARR_API_URL,
+    sonarrApiKey: env.SONARR_API_KEY,
+    sonarrUrl: env.SONARR_API_URL,
+    overseerrUrl: env.SEER_URL,
+    overseerrApiKey: env.SEER_API_KEY,
     timeZone: env.TZ ?? 'Europe/London',
     debug: env.DEBUG === 'true',
     mountPath: env.MOUNT_PATH ?? '/data',
