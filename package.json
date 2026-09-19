@@ -28,7 +28,7 @@
     "eslint": "^10.10.0",
     "eslint-plugin-tailwindcss": "^4.4.0",
     "typescript": "^5.9.0",
-    "vitest": "^3.2.0",
+    "vitest": "^4.1.11",
     "vue-tsc": "^3.0.0"
   }
 }
