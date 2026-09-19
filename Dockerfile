@@ -1,4 +1,5 @@
-FROM node:24-alpine AS build
+# build on the native arch: .output is plain JS, so the arm64 image only needs the COPY below
+FROM --platform=$BUILDPLATFORM node:24-alpine AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --no-audit --no-fund
