@@ -5,3 +5,7 @@ node_modules
 .env
 .idea
 .git
+.github
+.impeccable
+.playwright-mcp
+*.md

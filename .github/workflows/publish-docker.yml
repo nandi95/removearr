@@ -2,26 +2,27 @@ name: Publish Docker image
 
 on:
   push:
-    paths:
-      - 'invalid-path'
-#      - Dockerfile
-#      - .github/workflows/publish-docker.yml
-#      - app/**
-#      - server/**
-#      - shared/**
-#      - nuxt.config.ts
-#      - package.json
-#      - package-lock.json
-#      - .dockerignore
     branches:
       - main
+    paths:
+      - Dockerfile
+      - .dockerignore
+      - .github/workflows/publish-docker.yml
+      - app/**
+      - server/**
+      - shared/**
+      - nuxt.config.ts
+      - tsconfig.json
+      - package.json
+      - package-lock.json
+
 jobs:
   push_to_registry:
     name: Push Docker image to Docker Hub
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # required to be able to build multi-platform images
       - name: Set up QEMU
@@ -42,7 +43,7 @@ jobs:
           images: nandi95/removearr
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile
@@ -50,3 +51,5 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

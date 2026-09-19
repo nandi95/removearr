@@ -14,4 +14,6 @@ RUN mkdir -p .data && chown node:node .data
 USER node
 VOLUME /app/.data
 EXPOSE 8484
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+    CMD wget -qO- http://localhost:8484/ >/dev/null || exit 1
 CMD ["node", ".output/server/index.mjs"]

@@ -27,7 +27,73 @@ cp .env.example .env   # fill in your values
 docker compose up -d   # http://localhost:8484
 ```
 
-The SQLite database lives in `./data` (mounted at `/app/.data`).
+The SQLite database lives in the `removearr-data` volume (mounted at `/app/.data`).
+
+### Adding it to an existing compose stack
+
+No clone needed, the image is on Docker Hub. Drop this next to your arrs and fill in the env
+(see [.env.example](./.env.example) for every variable):
+
+```yaml
+services:
+  removearr:
+    image: nandi95/removearr:main
+    container_name: removearr
+    ports:
+      - "8484:8484"
+    environment:
+      TAUTULLI_API_KEY: ${TAUTULLI_API_KEY}
+      TAUTULLI_API_URL: http://tautulli:8181/api/v2
+      RADARR_API_KEY: ${RADARR_API_KEY}
+      RADARR_API_URL: http://radarr:7878/api/v3
+      SONARR_API_KEY: ${SONARR_API_KEY}
+      SONARR_API_URL: http://sonarr:8989/api/v3
+      SEER_API_KEY: ${SEER_API_KEY}
+      SEER_URL: http://seerr:5055
+      PLEX_URL: http://plex:32400
+      PLEX_SERVER_ID: ${PLEX_SERVER_ID}
+      PLEX_SERVER_NAME: ${PLEX_SERVER_NAME}
+      PLEX_EMAIL: ${PLEX_EMAIL}
+      PLEX_PASSWORD: ${PLEX_PASSWORD}
+      SESSION_SECRET: ${REMOVEARR_SESSION_SECRET}   # openssl rand -hex 32
+      TZ: Europe/London
+    volumes:
+      - removearr-data:/app/.data
+    restart: unless-stopped
+
+volumes:
+  removearr-data:
+```
+
+Service hostnames (`radarr`, `sonarr`, ...) resolve when the containers share a compose network. If your arrs
+run with `network_mode: host`, use the host's LAN IP instead. Keep the named volume, the container runs as
+`node` and cannot write to a root-owned bind mount.
+
+## Deployment
+
+Pushing to `main` builds a multi-arch image and publishes it as `nandi95/removearr:main`
+([workflow](.github/workflows/publish-docker.yml)).
+
+First time:
+
+```bash
+git clone https://github.com/nandi95/removearr.git && cd removearr
+cp .env.example .env    # fill in the values; if the arrs use host networking, point at the host's LAN IP
+docker compose up -d    # http://<host>:8484
+```
+
+Updating:
+
+```bash
+# Push changes to git, CI publishes the image
+git push
+
+# On the host (or let Watchtower pick it up):
+cd removearr && docker compose pull && docker compose up -d && docker image prune -f
+```
+
+The container exits on startup if any required env var is missing or the SQLite file cannot be opened,
+so a crash loop after `up -d` means check `docker logs removearr`.
 
 ## Develop
 
