@@ -1,4 +1,9 @@
 import { Cron } from 'croner';
+import { fetch } from 'undici';
+
+// node 24's bundled undici 7 dies with assert(!this.paused) when an upstream closes mid-body (nodejs/undici#5360),
+// and everything (arr/tautulli JSON, @ctrl/plex, the art proxy) goes through global fetch. undici 8 has the fix.
+globalThis.fetch = fetch as unknown as typeof globalThis.fetch;
 
 export default defineNitroPlugin(async () => {
     // importing config already fail-fasts on missing env
