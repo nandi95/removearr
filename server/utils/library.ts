@@ -35,7 +35,10 @@ export async function getLibrary(): Promise<Library> {
 
     // users who fully watched each movie, keyed by tautulli rating_key
     const movieWatchers = new Map<number, string[]>();
+    // history includes in-progress sessions; the library's last_played only updates once a session has stopped
+    const movieLastSeen = new Map<number, number>();
     for (const entry of movieHistory.data) {
+        movieLastSeen.set(entry.rating_key, Math.max(movieLastSeen.get(entry.rating_key) ?? 0, entry.stopped || entry.date));
         if (entry.watched_status !== 1) continue;
         const users = movieWatchers.get(entry.rating_key) ?? [];
         if (!users.includes(entry.user)) users.push(entry.user);
@@ -56,7 +59,7 @@ export async function getLibrary(): Promise<Library> {
                 size: movie.statistics.sizeOnDisk,
                 added: movie.added,
                 ratingKey: played ? Number(played.rating_key) : null,
-                lastPlayed: played?.last_played ?? null,
+                lastPlayed: played ? Math.max(played.last_played ?? 0, movieLastSeen.get(Number(played.rating_key)) ?? 0) || null : null,
                 requestedBy: requester(movieTags.filter(tag => tag.movieIds.includes(movie.id))),
                 watchedBy: played ? movieWatchers.get(Number(played.rating_key)) ?? [] : []
             };
