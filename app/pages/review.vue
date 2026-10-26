@@ -6,19 +6,20 @@ useHead({ title: 'Review' });
 
 const route = useRoute();
 const router = useRouter();
-const { status: fetchStatus, data, totals, keep } = useLibrary();
+const { status: fetchStatus, data, candidates, totals, keep } = useLibrary();
 const selected = useSelected();
 const toast = useToast();
 
-type Tab = 'deletable' | 'soon' | 'snoozed';
+type Tab = 'deletable' | 'soon' | 'snoozed' | 'all';
 const tab = computed({
-    get: () => (['deletable', 'soon', 'snoozed'].includes(String(route.query.tab)) ? route.query.tab : 'deletable') as Tab,
+    get: () => (tabs.value.some(t => t.value === route.query.tab) ? route.query.tab : 'deletable') as Tab,
     set: async v => router.replace({ query: { ...route.query, tab: v === 'deletable' ? undefined : v } })
 });
 const tabs = computed(() => [
     { label: 'Deletable', value: 'deletable', icon: 'i-lucide-trash-2', badge: totals.value.deletable.length || undefined },
     { label: 'Leaving soon', value: 'soon', icon: 'i-lucide-hourglass', badge: totals.value.soon.length || undefined },
-    { label: 'Kept', value: 'snoozed', icon: 'i-lucide-bookmark', badge: totals.value.snoozed.length || undefined }
+    { label: 'Kept', value: 'snoozed', icon: 'i-lucide-bookmark', badge: totals.value.snoozed.length || undefined },
+    { label: 'All', value: 'all', icon: 'i-lucide-library' }
 ]);
 
 const kind = ref<'all' | 'movie' | 'series'>('all');
@@ -26,7 +27,9 @@ const view = useCookie<'table' | 'grid'>('review-view', { default: () => 'table'
 const sort = ref<'size' | 'idle' | 'title'>('size');
 
 const rows = computed(() => {
-    const list = totals.value[tab.value].filter(c => kind.value === 'all' || c.kind === kind.value);
+    // all = the whole library, eligible or not, minus what was explicitly kept
+    const source = tab.value === 'all' ? candidates.value.filter(c => c.status !== 'snoozed') : totals.value[tab.value];
+    const list = source.filter(c => kind.value === 'all' || c.kind === kind.value);
     return [...list].sort((a, b) => {
         if (sort.value === 'title') return a.title.localeCompare(b.title);
         if (sort.value === 'idle') return (a.lastActivity ?? Infinity) - (b.lastActivity ?? Infinity);
@@ -89,7 +92,8 @@ const columns: TableColumn<Candidate>[] = [
 const empty = computed(() => ({
     deletable: { icon: 'i-lucide-party-popper', title: 'Nothing to delete', description: 'Come back after the next sync, or check what is leaving soon.' },
     soon: { icon: 'i-lucide-hourglass', title: 'Nothing leaving soon', description: `Items appear here once idle for ${Math.round((data.value?.deleteAfterDays ?? 14) / 2)} days.` },
-    snoozed: { icon: 'i-lucide-bookmark', title: 'Nothing kept', description: 'Use Keep on an item to protect it from review.' }
+    snoozed: { icon: 'i-lucide-bookmark', title: 'Nothing kept', description: 'Use Keep on an item to protect it from review.' },
+    all: { icon: 'i-lucide-library', title: 'Library is empty', description: 'Nothing to show outside of what you kept.' }
 }[tab.value]));
 </script>
 
@@ -175,6 +179,10 @@ const empty = computed(() => ({
                                     Season {{ row.original.seasonNumber }} ·
                                 </template>{{ row.original.year }}
                             </p>
+                            <StatusBadge v-if="tab === 'all'"
+                                         :status="row.original.status"
+                                         size="xs"
+                                         class="mt-1" />
                         </div>
                     </div>
                 </template>
