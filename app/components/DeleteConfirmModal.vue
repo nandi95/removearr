@@ -59,7 +59,7 @@ watch(open, v => {
                 </li>
             </ul>
             <UProgress v-if="running || finished"
-                       :value="done"
+                       :model-value="done"
                        :max="list.length"
                        class="mt-4"
                        :color="finished ? 'success' : 'primary'" />
