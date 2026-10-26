@@ -4,7 +4,7 @@ let client: PlexServer | undefined;
 
 async function getPlexClient() {
     if (!client) {
-        const account = await new MyPlexAccount(config.plexUrl, config.plexEmail, config.plexPassword).connect();
+        const account = await new MyPlexAccount({ baseUrl: config.plexUrl, username: config.plexEmail, password: config.plexPassword }).connect();
         const resource = await account.resource(config.plexServerName);
         client = await resource.connect();
     }
@@ -34,10 +34,13 @@ export async function syncLeavingSoon(ratingKeys: number[]) {
         // plex rejects adds to a collection that was created empty, so it is born with its first items
         log.info(`Creating Plex "${TITLE}" collection with ${ratingKeys.length} movies`);
         const params = new URLSearchParams({ type: '1', title: TITLE, smart: '0', sectionId: String(section.key) });
-        const created: any = await plex.query(`/library/collections?${params}&uri=${itemUri(ratingKeys)}`, 'post');
+        const created = await plex.query<{ MediaContainer: { Metadata: [{ ratingKey: string }] } }>({
+            path: `/library/collections?${params}&uri=${itemUri(ratingKeys)}`,
+            method: 'post'
+        });
         const key = created.MediaContainer.Metadata[0].ratingKey;
-        await plex.query(`/library/sections/${section.key}/all?type=18&id=${key}&summary.value=${encodeURIComponent(SUMMARY)}`, 'put');
-        await plex.query(`/library/collections/${key}/prefs?collectionMode=${MODE.showItems}`, 'put');
+        await plex.query({ path: `/library/sections/${section.key}/all?type=18&id=${key}&summary.value=${encodeURIComponent(SUMMARY)}`, method: 'put' });
+        await plex.query({ path: `/library/collections/${key}/prefs?collectionMode=${MODE.showItems}`, method: 'put' });
 
         return { added: ratingKeys.length, removed: 0 };
     }
@@ -49,14 +52,14 @@ export async function syncLeavingSoon(ratingKeys: number[]) {
     const add = ratingKeys.filter(key => !current.has(key));
     const remove = items.filter(item => !wanted.has(Number(item.ratingKey)));
 
-    if (add.length) await plex.query(`/library/collections/${collection.ratingKey}/items?uri=${itemUri(add)}`, 'put');
-    await Promise.all(remove.map(async item => plex.query(`/library/collections/${collection.ratingKey}/children/${item.ratingKey}`, 'delete')));
+    if (add.length) await plex.query({ path: `/library/collections/${collection.ratingKey}/items?uri=${itemUri(add)}`, method: 'put' });
+    await Promise.all(remove.map(async item => plex.query({ path: `/library/collections/${collection.ratingKey}/children/${item.ratingKey}`, method: 'delete' })));
 
     // hide the collection when it is empty, show it when it is not
     const before = items.length > 0;
     const after = wanted.size > 0;
     if (before !== after) {
-        await plex.query(`/library/collections/${collection.ratingKey}/prefs?collectionMode=${after ? MODE.showItems : MODE.hide}`, 'put');
+        await plex.query({ path: `/library/collections/${collection.ratingKey}/prefs?collectionMode=${after ? MODE.showItems : MODE.hide}`, method: 'put' });
     }
 
     return { added: add.length, removed: remove.length };
